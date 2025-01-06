@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Crunchyroll Series Remover From History",
+  "version": "1.0",
+  "description": "Supprime automatiquement une série enitère de l'historique Crunchyroll.",
+  "permissions": [
+    "activeTab"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.crunchyroll.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
