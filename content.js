@@ -1,3 +1,5 @@
+import getContentIds from "./api/fetch/get_contentids.js";
+import deleteEpisodes from "./api/fetch/delete_episode.js";
 
 let intervalId;
 let searchedTitle;
@@ -7,7 +9,7 @@ function ajouterBarreDeSaisie() {
     console.log('Ajout de la barre de saisie.');
     const barreDeSaisie = document.createElement('input');
     barreDeSaisie.type = 'text';
-    barreDeSaisie.placeholder = 'Supprimé une série';
+    barreDeSaisie.placeholder = 'Supprimer une série';
     barreDeSaisie.style.padding = '10px';
     barreDeSaisie.style.fontSize = '16px';
 
