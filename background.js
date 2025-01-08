@@ -12,7 +12,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 const data = await getContentIds(message.payload.title);
                 sendResponse({ success: true, data });
             } else if (message.action === "DELETE_EPISODES") {
-                const result = await deleteEpisodes(message.payload.document, message.payload.ids);
+                const result = await deleteEpisodes(message.payload.ids);
                 sendResponse({ success: true, data: result });
             } else {
                 sendResponse({ success: false, error: "Action inconnue" });

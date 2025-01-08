@@ -65,7 +65,7 @@ function ajouterBarreDeSaisie() {
                         }
                         // Envoyer un message pour supprimer les épisodes
                         chrome.runtime.sendMessage(
-                            { action: "DELETE_EPISODES", payload: { document : document, ids: contentIds } },
+                            { action: "DELETE_EPISODES", payload: { ids: contentIds } },
                             (deleteResponse) => {
                                 if (chrome.runtime.lastError) {
                                     console.error("Erreur de runtime:", chrome.runtime.lastError.message);
@@ -76,6 +76,7 @@ function ajouterBarreDeSaisie() {
 
                                 if (deleteResponse && deleteResponse.success) {
                                     console.log("Épisodes supprimés avec succès.");
+                                    location.reload(); // Recharger la page pour afficher les modifications                                    
                                 } else {
                                     console.log("Erreur lors de la suppression :", deleteResponse.error);
                                 }
