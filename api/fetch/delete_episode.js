@@ -1,6 +1,6 @@
 import fetchToken from "./get_token.js";
 
-async function deleteEpisodes(contentIds) {
+async function deleteLimitedEpisodes(contentIds) {
     try {
         if (!contentIds || contentIds === "") {
             throw new Error("Aucun ID valide fourni pour la suppression.");
@@ -21,9 +21,7 @@ async function deleteEpisodes(contentIds) {
             },
         });
 
-        if (response.ok) {
-            console.log(`Les épisodes ${contentIds} ont été supprimés avec succès.`);
-        } else {
+        if (!response.ok) {
             console.error(
                 `Erreur lors de la suppression : ${response.status} - ${response.statusText}`
             );
@@ -31,6 +29,28 @@ async function deleteEpisodes(contentIds) {
     } catch (error) {
         console.error("Erreur réseau ou lors de la suppression :", error.message);
     }
+}
+
+async function deleteEpisodes(contentIds) {
+    const idsArray = contentIds.split(",");
+    const chunkSize = 300;
+    let success = true;
+
+    for (let i = 0; i < idsArray.length; i += chunkSize) {
+        const chunk = idsArray.slice(i, i + chunkSize).join(",");
+        const result = await deleteLimitedEpisodes(chunk);
+        if (!result) {
+            success = false;
+        }
+        console.log(`Suppression de ${i + chunkSize} épisodes sur ${idsArray.length}`);
+        await sleep(2000); // Attendre 1 seconde entre chaque suppression
+    }
+
+    return success;
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export default deleteEpisodes;

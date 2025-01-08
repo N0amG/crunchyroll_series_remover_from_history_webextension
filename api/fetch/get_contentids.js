@@ -29,6 +29,11 @@ async function getWatchHistory(pageSize) {
         return null;
     }
 
+    if (!pageSize || pageSize < 1) {
+        console.error("L'historique est vide ou à un problème.");
+        return null;
+    }
+
     const url = `https://www.crunchyroll.com/content/v2/${tokenData.account_id}/watch-history`;
     const params = new URLSearchParams({ page_size: pageSize, page: 1 });
     const headers = {
@@ -58,13 +63,27 @@ async function getWatchHistory(pageSize) {
 
 async function getContentIds(title) {
     const historyLen = await getWatchHistoryLength();
-    const watchHistory = await getWatchHistory(historyLen);
-    if (!watchHistory || !watchHistory.data) {
-        console.error("Erreur lors de la récupération de l'historique de visionnage.");
+    if (!historyLen) {
+        console.error("Erreur lors de la récupération de la longueur de l'historique de visionnage.");
         return null;
     }
 
-    const contentIds = watchHistory.data
+    let allWatchHistory = [];
+    const pageSize = 2000;
+    const totalPages = Math.ceil(historyLen / pageSize);
+
+    for (let page = 1; page <= totalPages; page++) {
+        const watchHistory = await getWatchHistory(pageSize, page);
+        if (watchHistory) {
+            allWatchHistory = allWatchHistory.concat(watchHistory.data);
+            console.log("Page", page, ":", allWatchHistory);
+        } else {
+            console.error("Erreur lors de la récupération de l'historique de visionnage.");
+            return null;
+        }
+    }
+
+    const contentIds = allWatchHistory
         .filter((item) => item.panel && item.panel.episode_metadata && item.panel.episode_metadata.series_title.toLowerCase() === title.toLowerCase())
         .map((item) => item.id)
         .join(",");
