@@ -58,16 +58,7 @@ async function getWatchHistory(pageSize) {
 
 async function getContentIds(title) {
     const historyLen = await getWatchHistoryLength();
-    if (historyLen < 2000) {
     const watchHistory = await getWatchHistory(historyLen);
-    }
-    else {
-        watchHistory = Array();
-        for (let i = 2000; i < historyLen; i += 2000) {
-            const partOfHistory = await getWatchHistory(i);
-            watchHistory.push(partOfHistory);
-        }
-    }
     if (!watchHistory || !watchHistory.data) {
         console.error("Erreur lors de la récupération de l'historique de visionnage.");
         return null;
