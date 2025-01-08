@@ -5,15 +5,19 @@
   "description": "Supprime les séries de l'historique de visionnage sur Crunchyroll.",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "scripting"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "content_scripts": [
     {
       "matches": ["*://www.crunchyroll.com/*"],
-      "js": ["content.js"]
+      "js": ["content.js"],
+      "run_at": "document_end",
+      "type": "module"
     }
   ]
 }

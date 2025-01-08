@@ -1,13 +1,11 @@
-import getContentIds from "./api/fetch/get_contentids.js";
-import deleteEpisodes from "./api/fetch/delete_episode.js";
-
 let intervalId;
 let searchedTitle;
 
 // Ajouter une barre de saisie à la page
 function ajouterBarreDeSaisie() {
-    console.log('Ajout de la barre de saisie.');
+    if (document.getElementById('barreDeSaisie')) return; // Vérifier si la barre de saisie existe déjà
     const barreDeSaisie = document.createElement('input');
+    barreDeSaisie.id = 'barreDeSaisie';
     barreDeSaisie.type = 'text';
     barreDeSaisie.placeholder = 'Supprimer une série';
     barreDeSaisie.style.padding = '10px';
@@ -37,7 +35,6 @@ function ajouterBarreDeSaisie() {
 
     // Trouver le bouton "clear-history-button"
     const clearHistoryButton = document.getElementsByClassName('clear-history-button')[0];
-    console.log("Bouton trouvé: ", clearHistoryButton);
 
     // Insérer la barre de saisie juste avant le bouton "clear-history-button"
     if (clearHistoryButton) {
@@ -46,89 +43,42 @@ function ajouterBarreDeSaisie() {
 
     barreDeSaisie.addEventListener('keydown', function (event) {
         if (event.key === 'Enter') {
-            console.log('Entrée détectée dans la barre de saisie.');
             searchedTitle = barreDeSaisie.value.toLowerCase();
             barreDeSaisie.value = ''; // Vider la barre de recherche
-            if (intervalId) {
-                clearInterval(intervalId); // Arrêter l'intervalle précédent
-            }
-            intervalId = setInterval(relancerScript, 20); // Relancer le script toutes les 0.02 secondes
-        }
-    });
-}
-
-// Fonction pour faire défiler la page
-function scrollPage(noCardsFound = false) {
-    if (noCardsFound)
-        window.scrollBy(0, window.innerHeight); // Faire défiler d'une hauteur de fenêtre entière
-}
-
-// Fonction principale pour supprimer les cartes
-function supprimerHistorique() {
-    console.log('Suppression de l\'historique.');
-    // Sélectionner tous les conteneurs "history-playable-card"
-    const cards = document.querySelectorAll('div[class^="history-playable-card"]');
-
-    // Trouver la première carte qui correspond au titre recherché
-    const cardToDelete = Array.from(cards).find(card => {
-        const titleElement = card.querySelector('[class*="show-title"]');
-        return titleElement && titleElement.textContent.toLowerCase() === searchedTitle;
-    });
-
-    // Fonction pour supprimer une carte
-    function supprimerCarte(card) {
-        const trashIcons = card.querySelectorAll('[class*="trash-icon"]'); // Trouver toutes les icônes de la corbeille
-        if (trashIcons.length > 0) {
-            // Créer un événement de clic
-            const clickEvent = new MouseEvent('click', {
-                view: window,
-                bubbles: true,
-                cancelable: true
-            });
-
-            // Fonction pour vérifier la suppression
-            function verifierSuppression() {
-                let allRemoved = true;
-                for (const trashIcon of trashIcons) {
-                    trashIcon.dispatchEvent(clickEvent);
-                    if (document.body.contains(card)) {
-                        allRemoved = false;
+    
+            // Envoyer un message pour récupérer les contentIds
+            chrome.runtime.sendMessage(
+                { action: 'FETCH_CONTENT_IDS', payload: { title: searchedTitle } },
+                (response) => {
+                    if (chrome.runtime.lastError) {
+                        console.log("Erreur de runtime:", chrome.runtime.lastError);
+                        return;
+                    }
+                    if (response && response.success) {
+                        const contentIds = response.data;
+    
+                        // Envoyer un message pour supprimer les épisodes
+                        chrome.runtime.sendMessage(
+                            { action: 'DELETE_EPISODES', payload: { ids: contentIds } },
+                            (deleteResponse) => {
+                                if (chrome.runtime.lastError) {
+                                    console.log("Erreur de runtime:", chrome.runtime.lastError);
+                                    return;
+                                }
+                                if (deleteResponse && deleteResponse.success) {
+                                    console.log('Épisodes supprimés avec succès.');
+                                } else {
+                                    console.log('Erreur lors de la suppression des épisodes:', deleteResponse.error);
+                                }
+                            }
+                        );
+                    } else {
+                        console.log('Erreur lors de la récupération des contentIds:', response.error);
                     }
                 }
-                if (!allRemoved) {
-                    setTimeout(verifierSuppression, 100); // Réessayer après un délai
-                }
-            }
-
-            verifierSuppression();
+            );
         }
-    }
-
-    // Supprimer la carte trouvée
-    if (cardToDelete) {
-        supprimerCarte(cardToDelete);
-    }
-    else
-        scrollPage(true);
-
-    // Vérifier si la page est en bas
-    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
-        if (!cardToDelete) {
-            console.log('Arrêt du script.');
-            clearInterval(intervalId); // Arrêter le script
-        }
-    }
-}
-
-// Fonction pour relancer le script régulièrement
-function relancerScript() {
-    supprimerHistorique();
-    const cards = document.querySelectorAll('div[class^="history-playable-card"]');
-    const cardToDelete = Array.from(cards).find(card => {
-        const titleElement = card.querySelector('[class*="show-title"]');
-        return titleElement && titleElement.textContent.toLowerCase().includes(searchedTitle);
     });
-    scrollPage(!cardToDelete);
 }
 
 let currentUrl = window.location.href;
@@ -138,7 +88,7 @@ function checkAndAddBarreDeSaisie() {
     if (clearHistoryButton) {
         ajouterBarreDeSaisie();
     } else {
-        const observer = new MutationObserver(function() {
+        const observer = new MutationObserver(function () {
             const clearHistoryButton = document.getElementsByClassName('clear-history-button')[0];
             if (clearHistoryButton) {
                 ajouterBarreDeSaisie();
@@ -149,13 +99,10 @@ function checkAndAddBarreDeSaisie() {
     }
 }
 
-
-
 // Observer les changements dans l'URL
-const urlObserver = new MutationObserver(function() {
+const urlObserver = new MutationObserver(function () {
     if ((currentUrl !== window.location.href)) {
         currentUrl = window.location.href;
-        console.log('URL changée ou page rechargée:', currentUrl);
         if (currentUrl.includes('history') && !currentUrl.includes('crunchylists') && !currentUrl.includes('watchlist'))
             checkAndAddBarreDeSaisie();
     }

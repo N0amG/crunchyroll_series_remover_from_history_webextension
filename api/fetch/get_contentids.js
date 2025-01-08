@@ -3,7 +3,7 @@ import fetchToken from "./get_token.js";
 async function getWatchHistoryLength() {
     const tokenData = await fetchToken();
     if (!tokenData?.access_token || !tokenData?.account_id) {
-        console.error("Impossible d'obtenir le token ou l'ID de compte.");
+        console.log("Impossible d'obtenir le token ou l'ID de compte.");
         return null;
     }
 
@@ -17,7 +17,7 @@ async function getWatchHistoryLength() {
         const data = await response.json();
         return data.total;
     } catch (error) {
-        console.error("Erreur lors de la requête :", error);
+        console.log("Erreur lors de la requête :", error);
         return null;
     }
 }
@@ -25,7 +25,7 @@ async function getWatchHistoryLength() {
 async function getWatchHistory(pageSize) {
     const tokenData = await fetchToken();
     if (!tokenData || !tokenData.access_token || !tokenData.account_id) {
-        console.error("Impossible d'obtenir le token ou l'ID de compte.");
+        console.log("Impossible d'obtenir le token ou l'ID de compte.");
         return null;
     }
 
@@ -51,7 +51,7 @@ async function getWatchHistory(pageSize) {
         console.log("Historique de visionnage :", data);
         return data;
     } catch (error) {
-        console.error("Erreur lors de la requête :", error);
+        console.log("Erreur lors de la requête :", error);
         return null;
     }
 }
@@ -60,7 +60,7 @@ async function getContentIds(title) {
     const historyLen = await getWatchHistoryLength();
     const watchHistory = await getWatchHistory(historyLen);
     if (!watchHistory || !watchHistory.data) {
-        console.error("Erreur lors de la récupération de l'historique de visionnage.");
+        console.log("Erreur lors de la récupération de l'historique de visionnage.");
         return null;
     }
 
@@ -69,12 +69,12 @@ async function getContentIds(title) {
         .map((item) => item.id)
         .join(",");
 
-    if (contentIds) {
+    if (contentIds && contentIds.length > 0) {
         console.log("Résultats :", contentIds);
         return contentIds;
     } else {
         console.log("Aucun épisode trouvé pour le titre spécifié.");
-        return null;
+        return ""; // Retourne une chaîne vide si aucun ID trouvé
     }
 }
 

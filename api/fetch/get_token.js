@@ -43,7 +43,9 @@ async function fetchToken() {
             country: data.country
         };
     } catch (error) {
-        console.error("Erreur lors de la requête :", error);
+        console.log("Erreur lors de la requête :", error);
         return null; // Retourner null en cas d'erreur
     }
 }
+
+export default fetchToken;

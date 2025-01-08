@@ -1,35 +1,40 @@
 import fetchToken from "./get_token.js";
 
 async function deleteEpisodes(contentIds) {
-    //contentIds : lsit de string des épisodes à supprimer sous la forme 'ID,ID,...' dans l'url
     try {
-        const accessToken = await fetchToken();
+        if (!contentIds || contentIds === "") {
+            throw new Error("Aucun ID valide fourni pour la suppression.");
+        }
 
-
-        if (!accessToken || !accessToken.access_token || !accessToken.account_id) {
+        const tokenData = await fetchToken();
+        if (!tokenData || !tokenData.access_token || !tokenData.account_id) {
             throw new Error("Token ou account_id manquant");
         }
 
-        // URL de la requête DELETE
-        const url = `https://www.crunchyroll.com/content/v2/${accessToken.account_id}/watch-history/${contentIds}`;
+        const url = `https://www.crunchyroll.com/content/v2/${tokenData.account_id}/watch-history/${contentIds}`;
 
-        // Faire la requête DELETE
         const response = await fetch(url, {
             method: "DELETE",
             headers: {
-                "Authorization": `Bearer ${accessToken.access_token}`, // Token d'authentification
-                "Content-Type": "application/json" // Type des données (JSON)
-            }
+                "Authorization": `Bearer ${tokenData.access_token}`,
+                "Content-Type": "application/json",
+            },
         });
 
         if (response.ok) {
-            console.log(`Les épisodes ${contentIds} a été supprimé avec succès.`);
+            console.log(`Les épisodes ${contentIds} ont été supprimés avec succès.`);
         } else {
-            console.error("Erreur lors de la suppression :", response.status, response.statusText);
+            console.error(
+                `Erreur lors de la suppression : ${response.status} - ${response.statusText}`
+            );
         }
     } catch (error) {
-        console.error("Erreur réseau ou lors de la récupération du token :", error);
+        console.error("Erreur réseau ou lors de la suppression :", error.message);
     }
 }
 
+
 export default deleteEpisodes;
+
+
+// await deleteEpisodes(await getContentIds(searchedTitle)); pour supprimer les épisodes
