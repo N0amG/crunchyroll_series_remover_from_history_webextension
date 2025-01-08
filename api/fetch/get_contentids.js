@@ -17,7 +17,7 @@ async function getWatchHistoryLength() {
         const data = await response.json();
         return data.total;
     } catch (error) {
-        console.log("Erreur lors de la requête :", error);
+        console.error("Erreur lors de la requête :", error);
         return null;
     }
 }
@@ -51,7 +51,7 @@ async function getWatchHistory(pageSize) {
         console.log("Historique de visionnage :", data);
         return data;
     } catch (error) {
-        console.log("Erreur lors de la requête :", error);
+        console.error("Erreur lors de la requête :", error);
         return null;
     }
 }
@@ -60,7 +60,7 @@ async function getContentIds(title) {
     const historyLen = await getWatchHistoryLength();
     const watchHistory = await getWatchHistory(historyLen);
     if (!watchHistory || !watchHistory.data) {
-        console.log("Erreur lors de la récupération de l'historique de visionnage.");
+        console.error("Erreur lors de la récupération de l'historique de visionnage.");
         return null;
     }
 

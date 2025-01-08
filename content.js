@@ -41,39 +41,48 @@ function ajouterBarreDeSaisie() {
         clearHistoryButton.parentNode.insertBefore(barreDeSaisie, clearHistoryButton);
     }
 
-    barreDeSaisie.addEventListener('keydown', function (event) {
-        if (event.key === 'Enter') {
-            searchedTitle = barreDeSaisie.value.toLowerCase();
-            barreDeSaisie.value = ''; // Vider la barre de recherche
-    
+    barreDeSaisie.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            const searchedTitle = barreDeSaisie.value.toLowerCase();
+            barreDeSaisie.value = ""; // Vider la barre de recherche
+
             // Envoyer un message pour récupérer les contentIds
             chrome.runtime.sendMessage(
-                { action: 'FETCH_CONTENT_IDS', payload: { title: searchedTitle } },
+                { action: "FETCH_CONTENT_IDS", payload: { title: searchedTitle } },
                 (response) => {
                     if (chrome.runtime.lastError) {
-                        console.log("Erreur de runtime:", chrome.runtime.lastError);
+                        console.error("Erreur de runtime:", chrome.runtime.lastError.message);
                         return;
                     }
+
+                    console.log("Réponse de l'arrière-plan :", response);
+
                     if (response && response.success) {
                         const contentIds = response.data;
-    
+                        if (!contentIds || contentIds === "") { 
+                            console.log("Aucun ID de contenu trouvé pour le titre spécifié.");
+                            return;
+                        }
                         // Envoyer un message pour supprimer les épisodes
                         chrome.runtime.sendMessage(
-                            { action: 'DELETE_EPISODES', payload: { ids: contentIds } },
+                            { action: "DELETE_EPISODES", payload: { document : document, ids: contentIds } },
                             (deleteResponse) => {
                                 if (chrome.runtime.lastError) {
-                                    console.log("Erreur de runtime:", chrome.runtime.lastError);
+                                    console.error("Erreur de runtime:", chrome.runtime.lastError.message);
                                     return;
                                 }
+
+                                console.log("Réponse de suppression :", deleteResponse);
+
                                 if (deleteResponse && deleteResponse.success) {
-                                    console.log('Épisodes supprimés avec succès.');
+                                    console.log("Épisodes supprimés avec succès.");
                                 } else {
-                                    console.log('Erreur lors de la suppression des épisodes:', deleteResponse.error);
+                                    console.log("Erreur lors de la suppression :", deleteResponse.error);
                                 }
                             }
                         );
                     } else {
-                        console.log('Erreur lors de la récupération des contentIds:', response.error);
+                        console.log("Erreur lors de la récupération des contentIds :", response.error);
                     }
                 }
             );
